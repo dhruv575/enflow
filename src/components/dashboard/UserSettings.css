@@ -1,0 +1,141 @@
+.user-settings-tab {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray-200);
+}
+
+.user-settings-tab h2 {
+  font-size: 1.75rem;
+  color: var(--primary-color);
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--gray-300);
+}
+
+.settings-section {
+  margin-bottom: 2.5rem;
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+}
+
+.settings-section h3 {
+  font-size: 1.3rem;
+  color: var(--secondary-color);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.settings-form .form-row {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.settings-form .form-row .form-group {
+  flex: 1;
+}
+
+.settings-form .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.settings-form .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--primary-color);
+}
+
+.settings-form .form-group input {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.settings-form .form-group input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(255, 198, 92, 0.2);
+}
+
+.settings-form .form-group input.error {
+  border-color: var(--error-color);
+}
+
+.settings-form .error-message {
+  color: var(--error-color);
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+  display: block;
+}
+
+.settings-form .form-actions {
+  text-align: right;
+  margin-top: 1.5rem;
+}
+
+.settings-form .form-actions button {
+  padding: 0.65rem 1.5rem;
+}
+
+.submit-error,
+.submit-success {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.submit-error {
+  color: var(--error-color);
+  background-color: rgba(198, 40, 40, 0.05);
+  border: 1px solid rgba(198, 40, 40, 0.2);
+}
+
+.submit-success {
+  color: var(--success-color);
+  background-color: rgba(40, 167, 69, 0.05);
+  border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.settings-form .form-group input.disabled {
+  background-color: var(--gray-100);
+  color: var(--gray-600);
+  border-color: var(--gray-300);
+  cursor: not-allowed;
+}
+
+.settings-form .form-group small {
+  color: var(--gray-500);
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+  display: block;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .settings-form .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .user-settings-tab {
+    padding: 1.5rem;
+  }
+  
+  .user-settings-tab h2 {
+    font-size: 1.5rem;
+  }
+  
+  .settings-section h3 {
+    font-size: 1.15rem;
+  }
+} 

@@ -1,0 +1,180 @@
+.department-creation-page {
+  min-height: calc(100vh - 140px);
+  display: flex;
+  align-items: center;
+  padding: 6rem 0;
+  background: linear-gradient(145deg, #f6f9ff 0%, #eef4ff 100%);
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.auth-box {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  padding: 3rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-header h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 0.75rem;
+}
+
+.auth-header p {
+  font-size: 1.1rem;
+  color: var(--text-light);
+}
+
+.auth-form {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(255, 198, 92, 0.2);
+}
+
+.form-group input.error {
+  border-color: var(--error-color);
+}
+
+.error-message {
+  color: var(--error-color);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.submit-error {
+  color: var(--error-color);
+  background-color: rgba(198, 40, 40, 0.05);
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.form-actions button {
+  padding: 0.75rem 2rem;
+}
+
+/* Department Creation Form Specific Styles */
+
+.dept-creation-form h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin: 2.5rem 0 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dept-creation-form h3:first-of-type {
+  margin-top: 0;
+}
+
+.form-info {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.success-message {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: var(--accent-color);
+  color: #fff;
+  font-size: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+.success-message h3 {
+  font-size: 1.75rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.success-message p {
+  color: var(--text-light);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .auth-box {
+    padding: 2rem;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .auth-header h2 {
+    font-size: 2rem;
+  }
+  
+  .auth-form {
+    max-width: 100%;
+  }
+} 
