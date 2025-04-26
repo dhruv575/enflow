@@ -2,13 +2,36 @@ import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import UserSettings from '../components/dashboard/UserSettings';
+import UserManagement from '../components/dashboard/UserManagement';
+import WorkflowViewer from '../components/dashboard/WorkflowViewer';
+import WorkflowCreator from '../components/dashboard/WorkflowCreator';
+import IncidentViewer from '../components/dashboard/IncidentViewer';
+import LogViewer from '../components/dashboard/LogViewer';
+import LogUploader from '../components/dashboard/LogUploader';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { isLoggedIn, user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState('settings');
+  const initialTab = user?.permissions === 'Admin' ? 'overview' : 'workflows';
+  const [activeTab, setActiveTab] = useState(initialTab);
 
-  // Show loading state while auth is being checked
+  const tabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'workflows', label: 'Workflows' },
+    { id: 'logs', label: 'Logs' },
+    { id: 'uploadLog', label: 'Upload Log' },
+    { id: 'incidents', label: 'Incidents' },
+    { id: 'users', label: 'User Management', adminOnly: true },
+    { id: 'createWorkflow', label: 'Create Workflow', adminOnly: true },
+    { id: 'settings', label: 'Settings' }
+  ];
+
+  React.useEffect(() => {
+    if (!loading && user) {
+      setActiveTab(user.permissions === 'Admin' ? 'overview' : 'logs');
+    }
+  }, [loading, user]);
+
   if (loading) {
     return (
       <div className="dashboard-loading">
@@ -18,12 +41,10 @@ const Dashboard = () => {
     );
   }
 
-  // Redirect to login if not authenticated
   if (!isLoggedIn || !user) {
     return <Navigate to="/login" />;
   }
 
-  // Render content based on active tab
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -74,17 +95,17 @@ const Dashboard = () => {
             <div className="dashboard-actions">
               <h2>Quick Actions</h2>
               <div className="action-buttons">
-                <button className="action-button">
+                <button className="action-button" onClick={() => setActiveTab('uploadLog')}>
                   <i className="fas fa-upload"></i>
                   <span>Upload Log</span>
                 </button>
                 
-                <button className="action-button">
+                <button className="action-button" onClick={() => setActiveTab('createWorkflow')}>
                   <i className="fas fa-plus-circle"></i>
                   <span>Create Workflow</span>
                 </button>
                 
-                <button className="action-button">
+                <button className="action-button" onClick={() => setActiveTab('users')}>
                   <i className="fas fa-user-plus"></i>
                   <span>Add User</span>
                 </button>
@@ -105,11 +126,26 @@ const Dashboard = () => {
             </div>
           </div>
         );
+      case 'workflows':
+        return <WorkflowViewer />;
+      case 'logs':
+        return <LogViewer />;
+      case 'uploadLog':
+        return <LogUploader />;
+      case 'incidents':
+        return <IncidentViewer />;
+      case 'users':
+        return user.permissions === 'Admin' ? <UserManagement /> : <div>Access Denied</div>;
+      case 'createWorkflow':
+        return user.permissions === 'Admin' ? <WorkflowCreator /> : <div>Access Denied</div>;
       case 'settings':
         return <UserSettings />;
-      // Add cases for other tabs later (e.g., 'users', 'workflows')
       default:
-        return <div>Select a tab</div>;
+        return user.permissions === 'Admin' ? (
+          <div className="dashboard-content">Overview Content</div>
+        ) : (
+          <WorkflowViewer />
+        );
     }
   };
 
@@ -132,7 +168,64 @@ const Dashboard = () => {
                   <i className="fas fa-tachometer-alt"></i> Overview
                 </button>
               </li>
-              {/* Add more tabs based on user permissions later */} 
+              
+              <li>
+                <button 
+                  className={`nav-button ${activeTab === 'workflows' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('workflows')}
+                >
+                  <i className="fas fa-sitemap"></i> Workflows
+                </button>
+              </li>
+              
+              <li>
+                <button 
+                  className={`nav-button ${activeTab === 'logs' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('logs')}
+                >
+                  <i className="fas fa-file-alt"></i> Logs
+                </button>
+              </li>
+              
+              <li>
+                <button 
+                  className={`nav-button ${activeTab === 'uploadLog' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('uploadLog')}
+                >
+                  <i className="fas fa-upload"></i> Upload Log
+                </button>
+              </li>
+              
+              <li>
+                <button 
+                  className={`nav-button ${activeTab === 'incidents' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('incidents')}
+                >
+                  <i className="fas fa-exclamation-circle"></i> Incidents
+                </button>
+              </li>
+              
+              {user.permissions === 'Admin' && (
+                <>
+                  <li>
+                    <button 
+                      className={`nav-button ${activeTab === 'users' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('users')}
+                    >
+                      <i className="fas fa-users"></i> Users
+                    </button>
+                  </li>
+                  <li>
+                    <button 
+                      className={`nav-button ${activeTab === 'createWorkflow' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('createWorkflow')}
+                    >
+                      <i className="fas fa-plus-circle"></i> Create Workflow
+                    </button>
+                  </li>
+                </>
+              )}
+              
               <li>
                 <button 
                   className={`nav-button ${activeTab === 'settings' ? 'active' : ''}`}

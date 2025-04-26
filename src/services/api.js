@@ -3,15 +3,30 @@ const API_BASE_URL = 'https://droov-enflow-api.hf.space';
 
 // Helper function for making API requests
 async function fetchAPI(endpoint, options = {}) {
-  // Clean up endpoint slashes
-  const cleanedEndpoint = endpoint.replace(/^\/+/, '').replace(/\/+$/, '');
+  // Clean up endpoint slashes, but preserve trailing slash if present
+  let cleanedEndpoint = endpoint;
+  if (cleanedEndpoint.startsWith('/')) {
+    cleanedEndpoint = cleanedEndpoint.substring(1);
+  }
+  // Do NOT remove trailing slash if endpoint originally had one
+  // const cleanedEndpoint = endpoint.replace(/^\/+/, '').replace(/\/+$/, '');
   const url = `${API_BASE_URL}/api/${cleanedEndpoint}`;
+  
+  // Log the url to debug
+  console.log('Full API URL constructed:', url);
+  console.log('Making API request to:', url);
   
   // Default headers
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers
   };
+
+  // If FormData is being sent, remove the Content-Type header
+  // to let the browser set it with the boundary
+  if (options.body instanceof FormData) {
+    delete headers['Content-Type'];
+  }
 
   // Include auth token if available
   let token = null;
@@ -35,7 +50,21 @@ async function fetchAPI(endpoint, options = {}) {
   };
 
   try {
-    console.log(`API Request: ${config.method || 'GET'} ${url}`, options.body ? JSON.parse(options.body) : '');
+    console.log(`API Request: ${config.method || 'GET'} ${url}`, options.body instanceof FormData ? 'FormData' : (options.body ? JSON.parse(options.body) : ''));
+    
+    // For PUT requests with JSON body, log the stringified content
+    if (config.method === 'PUT' && typeof options.body === 'string') {
+      console.log('PUT request body string length:', options.body.length);
+      try {
+        const bodyObj = JSON.parse(options.body);
+        if (bodyObj.markdown_template) {
+          console.log('markdown_template length in request:', bodyObj.markdown_template.length);
+          console.log('First 100 chars of markdown_template:', bodyObj.markdown_template.substring(0, 100));
+        }
+      } catch (e) {
+        console.error('Error parsing request body for logging:', e);
+      }
+    }
     
     const response = await fetch(url, config);
     
@@ -61,7 +90,19 @@ async function fetchAPI(endpoint, options = {}) {
         url: url,
         method: config.method || 'GET'
       });
-      throw new Error(errorMessage);
+      
+      // Provide more detailed error for debugging common issues
+      if (response.status === 401) {
+        throw new Error(`Authentication error: ${errorMessage}. Please log in again.`);
+      } else if (response.status === 403) {
+        throw new Error(`Permission denied: ${errorMessage}. You don't have the required permissions.`);
+      } else if (response.status === 500) {
+        // Log internal server errors with more detail for debugging
+        console.error('Server Error Details:', data);
+        throw new Error(`Server error: ${errorMessage}. Check backend logs for details.`);
+      } else {
+        throw new Error(errorMessage);
+      }
     }
 
     console.log(`API Response: ${config.method || 'GET'} ${url}`, data);
@@ -114,14 +155,87 @@ export const departmentService = {
   
   getById: async (id) => {
     return fetchAPI(`/departments/${id}`);
+  },
+  
+  getMembers: async (departmentId) => {
+    console.log(`Calling getMembers with departmentId: ${departmentId}`);
+    
+    // Ensure URL starts with a slash for consistency
+    const response = await fetchAPI(`/departments/${departmentId}/members`);
+    
+    // Transform the response to match what the component expects
+    // The component expects members directly on the response object
+    if (response && response.data && response.data.members) {
+      return {
+        members: response.data.members,
+        status: response.status
+      };
+    }
+    
+    return response; // Return original response if the format is unexpected
+  },
+  
+  debugDepartment: async (departmentId) => {
+    console.log(`Calling debugDepartment with departmentId: ${departmentId}`);
+    return fetchAPI(`/departments/${departmentId}/debug`);
+  },
+  
+  addMember: async (departmentId, userData) => {
+    return fetchAPI(`/departments/${departmentId}/members`, {
+      method: 'POST',
+      body: JSON.stringify(userData)
+    });
+  },
+  
+  addMembersCSV: async (departmentId, formData) => {
+    // The correct endpoint for CSV upload
+    return fetch(`${API_BASE_URL}/api/departments/${departmentId}/members/csv`, {
+      method: 'POST',
+      headers: {
+        // Don't set Content-Type for FormData
+        'Authorization': `Bearer ${JSON.parse(localStorage.getItem('tokenData'))?.token || ''}`
+      },
+      body: formData
+    }).then(async response => {
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.error('Error parsing response:', e);
+      }
+      
+      if (!response.ok) {
+        throw new Error(data?.message || data?.error || response.statusText || 'Failed to upload CSV');
+      }
+      
+      return { data, status: response.status };
+    });
+  },
+  
+  removeMember: async (departmentId, userId) => {
+    return fetchAPI(`/departments/${departmentId}/members/${userId}`, {
+      method: 'DELETE'
+    });
+  },
+  
+  updateMemberPermissions: async (departmentId, userId, permissionsData) => {
+    return fetchAPI(`/departments/${departmentId}/members/${userId}/permissions`, {
+      method: 'PUT',
+      body: JSON.stringify(permissionsData)
+    });
+  },
+  
+  resetPassword: async (departmentId, userId) => {
+    return fetchAPI(`/departments/${departmentId}/members/${userId}/reset-password`, {
+      method: 'POST'
+    });
   }
 };
 
 // User services
 export const userService = {
   create: async (userData) => {
-    // This might be for adding users *after* department exists
-    return fetchAPI('/users', { 
+    return fetchAPI('users', { 
       method: 'POST',
       body: JSON.stringify(userData)
     });
@@ -129,30 +243,31 @@ export const userService = {
   
   // Endpoint used by DepartmentCreation page
   createWithDepartment: async (departmentWithAdmin) => {
-    // POST /api/departments (no trailing slash needed now)
-    return fetchAPI('departments', { // Remove trailing slash here
+    // The department route is registered with an empty string at the end
+    // This needs to match the route in the backend
+    return fetchAPI('departments', {
       method: 'POST',
       body: JSON.stringify(departmentWithAdmin)
     });
   },
   
   createBulk: async (users) => {
-    return fetchAPI('/users/bulk', {
+    return fetchAPI('users/bulk', {
       method: 'POST',
       body: JSON.stringify(users)
     });
   },
   
   getAll: async () => {
-    return fetchAPI('/users');
+    return fetchAPI('users');
   },
   
   getById: async (id) => {
-    return fetchAPI(`/users/${id}`);
+    return fetchAPI(`users/${id}`);
   },
   
   update: async (id, userData) => {
-    return fetchAPI(`/users/${id}`, {
+    return fetchAPI(`users/${id}`, {
       method: 'PUT',
       body: JSON.stringify(userData)
     });
@@ -175,7 +290,7 @@ export const userService = {
   },
   
   delete: async (id) => {
-    return fetchAPI(`/users/${id}`, {
+    return fetchAPI(`users/${id}`, {
       method: 'DELETE'
     });
   }
@@ -184,14 +299,16 @@ export const userService = {
 // Workflow services
 export const workflowService = {
   create: async (workflowData) => {
-    return fetchAPI('/workflows', {
+    // Uses fetchAPI, endpoint needs leading slash AND trailing slash to match route definition
+    return fetchAPI('/workflows/', {
       method: 'POST',
       body: JSON.stringify(workflowData)
     });
   },
   
   getAll: async () => {
-    return fetchAPI('/workflows');
+    // Endpoint needs trailing slash as defined in backend route
+    return fetchAPI('/workflows/'); 
   },
   
   getById: async (id) => {
@@ -199,6 +316,8 @@ export const workflowService = {
   },
   
   update: async (id, workflowData) => {
+    console.log('Workflow update API call with ID:', id);
+    console.log('Workflow update data:', workflowData);
     return fetchAPI(`/workflows/${id}`, {
       method: 'PUT',
       body: JSON.stringify(workflowData)
@@ -209,52 +328,194 @@ export const workflowService = {
     return fetchAPI(`/workflows/${id}`, {
       method: 'DELETE'
     });
+  },
+
+  // --- NEW FUNCTIONS --- 
+
+  uploadForm: async (workflowId, formData) => {
+    return fetchAPI(`/workflows/${workflowId}/forms`, {
+      method: 'POST',
+      headers: {
+        // Remove Content-Type for FormData - browser will set it with proper boundary
+      },
+      body: formData
+    });
+  },
+
+  removeForm: async (workflowId) => {
+    return fetchAPI(`/workflows/${workflowId}/forms`, {
+      method: 'DELETE'
+    });
+  },
+
+  addFormField: async (workflowId, fieldData) => {
+    return fetchAPI(`/workflows/${workflowId}/form-fields`, {
+      method: 'POST',
+      body: JSON.stringify(fieldData)
+    });
   }
+
+  // Potentially add removeFormField, removeDataRequirement etc. later if needed
 };
 
 // Log services
 export const logService = {
   upload: async (logData) => {
     const formData = new FormData();
-    // Ensure keys match backend expectations (e.g., 'logFile')
-    formData.append('logFile', logData.file); 
+    formData.append('logFile', logData.file);
     formData.append('date', logData.date);
     
     return fetchAPI('/logs/upload', {
       method: 'POST',
-      headers: { 
-        // Remove Content-Type: application/json for FormData
-        // Let the browser set the correct Content-Type with boundary
-      },
+      headers: {},
       body: formData
     });
   },
   
-  getAll: async () => {
-    return fetchAPI('/logs');
+  classify: async (formData) => {
+    console.log('Inside apiService.logs.classify');
+    console.log('FormData keys:', [...formData.keys()]);
+    console.log('FormData value for "file":', formData.get('file'));
+    console.log('FormData value for "log_date":', formData.get('log_date'));
+
+    if (!formData.has('file') || !formData.get('file')) {
+        console.error('FormData is missing the "file" key or its value is empty before fetch!');
+    }
+
+    return fetch(`${API_BASE_URL}/api/logs/classify`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${JSON.parse(localStorage.getItem('tokenData'))?.token || ''}`
+      },
+      body: formData
+    }).then(async response => {
+      let data = null;
+      const contentType = response.headers.get("content-type");
+      try {
+          if (contentType && contentType.indexOf("application/json") !== -1) {
+              data = await response.json();
+          } else if (!response.ok) {
+             const text = await response.text();
+             console.error("Non-JSON error response text:", text);
+             data = { message: `Server error ${response.status}. Check console for details.` };
+          }
+      } catch (e) {
+        console.error('Error processing response:', e);
+        data = { message: `Failed to parse server response. Status: ${response.status}` };
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.message || `HTTP error! status: ${response.status}`);
+      }
+
+      return { data: data || { message: "Success" }, status: response.status };
+    });
+  },
+  
+  getUserLogs: async () => {
+    return fetchAPI('logs/user');
   },
   
   getById: async (id) => {
-    return fetchAPI(`/logs/${id}`);
+    return fetchAPI(`logs/${id}`);
+  },
+  
+  processSync: async (id) => {
+    return fetchAPI(`logs/${id}/process-sync`, {
+      method: 'POST'
+    });
   }
 };
 
 // Incident services
 export const incidentService = {
-  getAll: async () => {
-    return fetchAPI('/incidents');
+  // Get the user's own incidents
+  getUserIncidents: async () => {
+    return fetchAPI('incidents/user');
+  },
+  
+  // Get department incidents (admin only)
+  getDepartmentIncidents: async () => {
+    return fetchAPI('incidents/department');
   },
   
   getById: async (id) => {
-    return fetchAPI(`/incidents/${id}`);
+    return fetchAPI(`incidents/${id}`);
+  },
+  
+  getByDateRange: async (dateData) => {
+    return fetchAPI('incidents/date-range', {
+      method: 'POST',
+      body: JSON.stringify(dateData)
+    });
+  },
+  
+  getByWorkflow: async (workflowId) => {
+    return fetchAPI(`incidents/workflow/${workflowId}`);
+  },
+  
+  // Process an incident synchronously (without using Celery)
+  processSync: async (id) => {
+    return fetchAPI(`incidents/${id}/process`, {
+      method: 'POST'
+    });
+  },
+  
+  // Get all incidents with filter options
+  getIncidents: async (filters = {}) => {
+    return fetchAPI('incidents', {
+      method: 'POST',
+      body: JSON.stringify(filters)
+    });
+  },
+  
+  // Create an incident from an activity
+  createFromActivity: async (activityData) => {
+    // Make sure activityData includes the log_text if it's not already provided
+    if (!activityData.log_text && activityData.extracted_text) {
+      activityData.log_text = activityData.extracted_text;
+    }
+    
+    return fetchAPI('incidents/create-from-activity', {
+      method: 'POST',
+      body: JSON.stringify(activityData)
+    });
   }
 };
 
-export default {
+// Helper function to format the response and extract password data if available
+function processUserResponse(response) {
+  // Check if we have a valid user response
+  const userData = response.data && response.data.user ? response.data.user 
+                 : response.user ? response.user 
+                 : null;
+                 
+  if (userData) {
+    // Check for password data and ensure it's accessible
+    if (userData.raw_password) {
+      // Password is already in the user data
+      return userData;
+    } else if (response.data && response.data.new_password) {
+      // Some APIs return password in the root response
+      userData.raw_password = response.data.new_password;
+      return userData;
+    } else if (response.new_password) {
+      // Another possible response format
+      userData.raw_password = response.new_password;
+      return userData;
+    }
+  }
+  return userData || null;
+}
+
+// Create the API service object
+const apiService = {
   auth: authService,
   departments: departmentService,
   users: userService,
   workflows: workflowService,
   logs: logService,
   incidents: incidentService
-}; 
+};
+
+export default apiService; 

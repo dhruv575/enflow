@@ -1,0 +1,479 @@
+.log-uploader-container {
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.log-uploader-header {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e1e4e8;
+  padding-bottom: 15px;
+}
+
+.log-uploader-header h2 {
+  color: #2c3e50;
+  margin-bottom: 8px;
+  font-size: 1.8rem;
+}
+
+.log-uploader-header p {
+  color: #5a6268;
+  margin: 0;
+}
+
+.log-uploader-content {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.upload-section {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.file-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: #f1f3f5;
+  cursor: pointer;
+}
+
+.date-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
+
+.file-info {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.file-info p {
+  margin: 5px 0;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.upload-button,
+.reset-button,
+.process-all-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.upload-button {
+  background-color: #007bff;
+  color: white;
+  flex: 2;
+}
+
+.upload-button:hover:not(:disabled) {
+  background-color: #0069d9;
+  transform: translateY(-1px);
+}
+
+.reset-button {
+  background-color: #6c757d;
+  color: white;
+  flex: 1;
+}
+
+.reset-button:hover:not(:disabled) {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+.process-all-button {
+  background-color: #28a745;
+  color: white;
+  margin-top: 10px;
+}
+
+.process-all-button:hover:not(:disabled) {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+.process-all-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.upload-button:disabled,
+.reset-button:disabled,
+.process-all-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #dc3545;
+  margin: 15px 0;
+  padding: 10px;
+  background-color: #f8d7da;
+  border-radius: 4px;
+  border: 1px solid #f5c6cb;
+}
+
+.results-section {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.section-header {
+  margin-bottom: 15px;
+}
+
+.section-header h3 {
+  color: #343a40;
+  margin-bottom: 8px;
+}
+
+.section-header p {
+  color: #6c757d;
+  margin-top: 0;
+}
+
+.no-activities {
+  text-align: center;
+  padding: 30px;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.activities-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.activity-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  border-left: 4px solid #f8f9fa;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #e0e0e0;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  background-color: #fff;
+  transition: box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.activity-card.classified {
+  border-left-color: #4CAF50;
+}
+
+.activity-card.unclassified {
+  border-left-color: #ffcc80;
+}
+
+.activity-card.processed {
+  background-color: #f8f9fa;
+  border-left-color: #007bff;
+}
+
+.activity-card.error {
+  border-left: 5px solid #f44336;
+  background-color: #fff5f5;
+}
+
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.activity-header h4 {
+  margin: 0;
+  font-size: 1.1em;
+  color: #333;
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.workflow-badge {
+  background-color: #e0f2f7;
+  color: #007bff;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+.activity-details {
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+  color: #495057;
+}
+
+.activity-details p {
+  margin: 5px 0;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.activity-processing-indicator,
+.activity-error-message {
+  font-size: 0.85em;
+  padding: 8px 10px;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.activity-processing-indicator {
+  color: #555;
+  background-color: #f0f0f0;
+}
+
+.activity-error-message {
+  color: #c0392b;
+  background-color: #fdecea;
+  border: 1px solid #f5c6cb;
+}
+
+.activity-actions {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.view-button,
+.create-button,
+.view-form-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.view-button {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.view-button:hover {
+  background-color: #ced4da;
+}
+
+.create-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.create-button:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.create-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.view-form-button {
+  background-color: #007bff;
+  color: white;
+}
+
+.view-form-button:hover {
+  background-color: #0069d9;
+}
+
+/* Modal styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-modal {
+  width: 90%;
+  max-width: 800px;
+}
+
+.modal-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #e1e4e8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #343a40;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.close-button:hover {
+  color: #343a40;
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e1e4e8;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.activity-metadata {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.activity-full-text {
+  margin-top: 20px;
+}
+
+.activity-full-text h5 {
+  color: #495057;
+  margin-bottom: 10px;
+}
+
+.activity-full-text p {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  white-space: pre-line;
+  font-family: monospace;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.workflow-info {
+  color: #28a745;
+  font-weight: 500;
+}
+
+.form-preview {
+  background-color: white;
+  padding: 20px;
+  border: 1px solid #e1e4e8;
+  border-radius: 4px;
+}
+
+.print-button {
+  background-color: #17a2b8;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.print-button:hover {
+  background-color: #138496;
+}
+
+.spinner-small {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+.spinner-tiny {
+  display: inline-block;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-left-color: #007bff;
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  animation: spin 1s linear infinite;
+  margin-right: 6px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+} 

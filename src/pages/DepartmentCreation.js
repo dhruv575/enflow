@@ -95,24 +95,38 @@ const DepartmentCreation = () => {
         name: departmentData.departmentName,
         address: departmentData.departmentAddress,
         website: departmentData.departmentWebsite || '',
-        admin_email: departmentData.adminEmail, // Use snake_case to match backend controller
-        admin_name: departmentData.adminName,   // Use snake_case
-        admin_password: departmentData.adminPassword, // Use snake_case
-        admin_position: departmentData.adminPosition // Use snake_case
+        admin_email: departmentData.adminEmail,
+        admin_name: departmentData.adminName,
+        admin_password: departmentData.adminPassword,
+        admin_position: departmentData.adminPosition
       };
       
       try {
-        // Call the API to create department with admin using the flat structure
+        // Call the API to create department with admin
+        console.log('Sending department creation request:', flatData);
         const response = await userService.createWithDepartment(flatData);
         
-        setIsSubmitting(false);
-        setSubmitSuccess(true);
+        console.log('Department created successfully:', response.data);
         
-        // Redirect after success message
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
-        
+        // Check if the response has the success flag
+        if (response.data.success) {
+          // Log details about the newly created department
+          console.log('Department created with members:', 
+            response.data.department.members_debug || response.data.department.members);
+          
+          setIsSubmitting(false);
+          setSubmitSuccess(true);
+          
+          // Redirect after success message
+          setTimeout(() => {
+            navigate('/login');
+          }, 3000);
+        } else {
+          // Handle unexpected response format
+          setIsSubmitting(false);
+          setSubmitError('Department created but response was incomplete. Please contact support.');
+          console.error('Incomplete department creation response:', response);
+        }
       } catch (error) {
         setIsSubmitting(false);
         setSubmitError(error.message || 'There was an error creating the department. Please try again.');

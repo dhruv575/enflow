@@ -12,31 +12,28 @@ through each officer's daily logs at the end of the day, identify each activity,
 classify it by incident, and then prepare any forms or email drafts relevant
 to that incident.
 
-Proposed Technical Stack
+Implemented Technical Stack
 
-1. MongoDB + Express + Node: We will intend to use MongoDB for
-    storage of the raw forms, specified AI prompts, and data. This will be
-    interacted with through Express and Node.
-2. HuggingFace and Flask: The backend will initially be built as a Hug-
-    gingFace space and coded in Python/Flask. We will use this to create
-    and run our server that will be accessed seperately from the backend.
-3. Cloudinary: Cloudinary will be used to process, store, and display
-    images
-4. Celery: For managing tasks and workers
-5. PyTesseract: For OCR purposes
-6. OpenAI API:ChatGPT 4o-mini will be used for any LLM applications.
-    Make sure we are specifically using 4o-mini
-7. React: The frontend will be all react. The app has been created using
-    npx create-react-app to begin with.
+1. MongoDB + Express + React: MongoDB is used for storage of incident data, markdown templates, workflows, and user information. This is accessed through a Flask backend and presented in a React frontend.
+2. Flask API: The backend is built with Python/Flask for robust API functionality.
+3. OpenAI API: GPT-4o-mini is used for all natural language processing tasks:
+   - Extracting activities from log texts
+   - Classifying activities into appropriate workflows
+   - Extracting required data from activities
+   - Filling markdown templates with extracted data
+4. PyTesseract: For OCR processing of PDF log files
+5. Celery with Redis: For managing asynchronous tasks and background workers
+6. WeasyPrint: For converting markdown templates to PDF documents
+7. JWT Authentication: For secure user authentication and authorization
 
 ## Environment Variables
 
-For security purposes, all sensitive credentials should be stored in environment variables, not in the code.
+For security purposes, all sensitive credentials are stored in environment variables, not in the code.
 
 1. **Backend Setup**: 
    - Navigate to the `backend` directory
    - Copy `env.example` to `.env`: `cp env.example .env`
-   - Edit `.env` with your credentials for MongoDB, Cloudinary, OpenAI, etc.
+   - Edit `.env` with your credentials for MongoDB, OpenAI, etc.
    - Alternatively, run the setup script: `python setup_env.py`
 
 2. **Redis Configuration**:
@@ -46,7 +43,11 @@ For security purposes, all sensitive credentials should be stored in environment
      - `REDIS_PASSWORD`: Password for authentication
    - Alternatively, set `REDIS_URL` directly as: `redis://:{password}@{host}:{port}/0`
 
-3. **HuggingFace Deployment**:
+3. **OpenAI API**:
+   - `OPENAI_API_KEY`: Required for all NLP functionality
+   - The application uses GPT-4o-mini model for optimal performance
+
+4. **HuggingFace Deployment**:
    - When deploying to HuggingFace, set your environment variables in the HuggingFace Spaces secrets page
    - Do not commit sensitive information to the repository
 
@@ -54,8 +55,7 @@ For more details, see the [backend README](backend/README.md).
 
 ## Backend Setup
 
-We have begun by creating an empty HuggingFace space. It is saved in
-thebackendfolder in the root folder of our application.
+The backend is deployed on HuggingFace Spaces and available at [droov/enflow-api](https://huggingface.co/spaces/droov/enflow-api).
 
 User Model
 
@@ -79,9 +79,9 @@ Workflow Model
 
 - title (String)
 - description (String)
-- data requirements[] (String, String)
-- raw forms[] (File)
-- form fields[] ((Number, String)[])
+- data_requirements[] (field, description)
+- markdown_template (String)
+- template_name (String)
 
 
 Log Model
@@ -89,7 +89,7 @@ Log Model
 - user (Foreign Key)
 - department (Foreign Key)
 - date (Date)
-- log (File)
+- log_text (String)
 - incidents[] (Foreign Key)
 
 Incident Model
@@ -99,7 +99,10 @@ Incident Model
 - workflow (Foreign Key)
 - description (String)
 - date (Date)
-- filledforms[] (File)
+- activity_text (String)
+- status (String)
+- filled_forms[] (URL)
+- extracted_data (JSON)
 
 
 Department Creation Workflow
@@ -118,26 +121,24 @@ each member. They should receive an email through EmailJS telling them
 they have been signed up for Enflow, as well as their username and password.
 
 Workflow Creation Pipeline
-Admins should be able to see current workflows, delete workflows, and add
-new workflows. For each workflow, they should add the associated incident,
-a description that both describes what the actual incident is and a detailed
-walkthrough of the steps that must be taken to comply with procedures for
-that incident's workflow, a way to define what information is necessary to fill
-out the forms (and what each piece of information means/is), and a way to
-upload pdfs, as well as create "text boxes" on them where text should go and
-being able to link each text box to a certain piece of information.
+Admins can view existing workflows, delete workflows, and create new ones. Each workflow includes:
+- A title and detailed description
+- Data requirements: field definitions specifying what information should be extracted from logs
+- A markdown template: The form template with placeholders for extracted data
+
+The markdown-based approach allows for flexible form design while maintaining ease of use. Admins create templates with placeholders (e.g., {{field_name}}) that will be automatically filled with extracted data.
 
 Log Upload/Incident Creation Pipeline
-Members should be able to upload their daily logs as a PDF. Something like
-PyTesseract should be used to read through the PDF, and get all of the text
-from it. An LLM should then be called to divide up the text into an array
-of "activities" or "events". From here on out we should start using Celery
-for task management. Another LLM, with context on what the different
-workflows mean, should then be called on each activity to either designate
-them as mundane or classify them into one of our workflows and create an
-incident. Lastly, an AI agent with context on the relevant workflow should
-be called to complete the workflow for each incident and then return the
-necessary information back to the user.
+Members upload their daily logs as PDF files. The system processes these logs in the following steps:
+
+1. PDF Extraction: Using PyTesseract for OCR to convert the PDF to text.
+2. Activity Extraction: An LLM (GPT-4o-mini) analyzes the text and divides it into separate activities.
+3. Workflow Classification: Each activity is analyzed and classified into the appropriate workflow (or marked as mundane).
+4. Data Extraction: For each identified incident, required data is extracted based on the workflow's data requirements.
+5. Form Generation: Markdown templates are filled with the extracted data.
+6. PDF Conversion: Filled markdown is converted to PDF using WeasyPrint.
+
+This process can run either synchronously or asynchronously using Celery task management.
 
 
 Backend Development Steps
@@ -177,7 +178,7 @@ The backend has been developed with all core functionality in place and is now d
 The backend includes:
 - Authentication and user management with admin/user roles
 - Department creation and management
-- Workflow definition with data requirements and form management
+- Workflow definition with data requirements and markdown templates
 - Log upload and processing with OCR and LLM-based activity extraction
 - Incident creation and tracking based on log activities
 - Celery task management with Redis for background processing
@@ -189,8 +190,7 @@ For security, all credentials are stored in environment variables:
 1. Create a `.env` file in the backend directory with:
    - MongoDB connection credentials
    - JWT secret
-   - Cloudinary API credentials
-   - OpenAI API key
+   - OpenAI API key (required for NLP functionality)
    - Redis configuration (see Redis Configuration section above)
    - Other configuration parameters
 
@@ -214,7 +214,7 @@ want you to keep in mind
     be used by law enforcement, we need it to be well protected
 3. Backend Logging: Make sure that we have good backend logs to ensure
     that our eventual debugging process is quick.
-4. Feebdack: Many of our processes might take a little while; ensure that
+4. Feedback: Many of our processes might take a little while; ensure that
     we are sending regular checkpointed updates to our frontend so we can
     keep users informed on where we are in the process.
 
